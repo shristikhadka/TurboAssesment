@@ -2,7 +2,9 @@
   "name": "@turbovets-assessment/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "seed": "node seed-database.js"
+  },
   "private": true,
   "dependencies": {
     "@angular/common": "~20.3.0",

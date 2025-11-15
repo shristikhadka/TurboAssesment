@@ -10,6 +10,12 @@ import { AppModule } from './app/app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   
+  // Enable CORS for frontend
+  app.enableCors({
+    origin: 'http://localhost:4200', // Angular dev server
+    credentials: true,
+  });
+  
   // Add root route handler using Express directly
   const expressApp = app.getHttpAdapter().getInstance();
   expressApp.get('/', (req, res) => {

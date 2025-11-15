@@ -56,7 +56,12 @@ export class AuthService {
 
   // GET PROFILE: Get current user info (requires token)
   getProfile(): Observable<User> {
-    return this.http.get<User>(`${API_URL}/auth/profile`);
+    const token = this.getToken();
+    return this.http.get<User>(`${API_URL}/auth/profile`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
   }
 
   // SAVE TOKEN: Store JWT token in localStorage
