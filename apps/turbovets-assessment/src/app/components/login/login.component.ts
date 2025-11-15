@@ -62,6 +62,31 @@ import { AuthService, LoginRequest } from '../../services/auth.service';
           </button>
         </form>
 
+        <!-- Test Credentials -->
+        <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 class="text-sm font-semibold mb-3 text-gray-700">Test Accounts:</h3>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-gray-700">Admin:</span>
+              <code class="bg-white px-2 py-1 rounded text-gray-800 border border-gray-200 text-xs">admin@test.com</code>
+              <span class="text-gray-500">/</span>
+              <code class="bg-white px-2 py-1 rounded text-gray-800 border border-gray-200 text-xs">password123</code>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-gray-700">User:</span>
+              <code class="bg-white px-2 py-1 rounded text-gray-800 border border-gray-200 text-xs">user@test.com</code>
+              <span class="text-gray-500">/</span>
+              <code class="bg-white px-2 py-1 rounded text-gray-800 border border-gray-200 text-xs">password123</code>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-gray-700">Viewer:</span>
+              <code class="bg-white px-2 py-1 rounded text-gray-800 border border-gray-200 text-xs">viewer@test.com</code>
+              <span class="text-gray-500">/</span>
+              <code class="bg-white px-2 py-1 rounded text-gray-800 border border-gray-200 text-xs">password123</code>
+            </div>
+          </div>
+        </div>
+
         <!-- Link to register -->
         <p class="mt-4 text-center text-sm text-gray-600">
           Don't have an account?
