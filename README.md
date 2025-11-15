@@ -1,101 +1,391 @@
-# TurbovetsAssessment
+# TurboVets Assessment - Task Management System
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A secure, role-based task management system built with NestJS, Angular, and TypeORM. Features JWT authentication, organization-level data scoping, and service-layer RBAC enforcement.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## 🎯 Overview
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+This application allows users with different roles (ADMIN, USER, VIEWER) to manage tasks within their organization. Tasks are scoped to organizations, ensuring data isolation and security.
 
-## Run tasks
+## 🛠️ Tech Stack
 
-To run the dev server for your app, use:
+- **Backend:** NestJS (TypeScript/Node.js)
+- **Frontend:** Angular (TypeScript)
+- **Database:** SQLite (TypeORM)
+- **Authentication:** JWT (JSON Web Tokens)
+- **Styling:** TailwindCSS
+- **Architecture:** NX Monorepo
 
-```sh
-npx nx serve turbovets-assessment
+## 📋 Features
+
+### ✅ Authentication & Authorization
+- JWT-based authentication
+- User registration with organization assignment
+- Protected routes with JWT guards
+- Role-based access control (RBAC)
+
+### ✅ User Roles
+- **ADMIN:** Full access (create, read, update, delete tasks + add users)
+- **USER:** Can create, read, update tasks (cannot delete)
+- **VIEWER:** Read-only access (can only view tasks)
+
+### ✅ Task Management
+- Create, read, update, and delete tasks
+- Tasks scoped to user's organization
+- Status tracking (PENDING, IN_PROGRESS, COMPLETED)
+
+### ✅ Organization Scoping
+- Users belong to organizations
+- Tasks are isolated by organization
+- Users can only see tasks from their organization
+
+### ✅ User Management
+- Admins can add users to their organization
+- Role assignment during user creation
+- Automatic organization assignment
+
+## 🚀 Setup Instructions
+
+### Prerequisites
+- Node.js 18+ and npm
+- Git (optional, for cloning)
+
+### Installation
+
+1. **Clone or download the repository**
+   ```bash
+   cd turbovets-assessment
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start the backend**
+   ```bash
+   npx nx serve api
+   ```
+   Backend runs on: `http://localhost:3000`
+
+4. **Start the frontend** (in a new terminal)
+   ```bash
+   npx nx serve turbovets-assessment
+   ```
+   Frontend runs on: `http://localhost:4200`
+
+5. **Access the application**
+   - Open browser: `http://localhost:4200`
+   - You'll be redirected to the login page
+
+### Initial Setup
+
+1. **Create an organization** (if needed)
+   - The database will auto-create a default organization (ID: 1) on first run
+   - Or manually insert via SQLite:
+     ```sql
+     INSERT INTO organizations (name) VALUES ('Default Organization');
+     ```
+
+2. **Register a user**
+   - Go to `/register`
+   - Enter email, password (min 6 chars), organizationId (use 1)
+   - Click "Register"
+
+3. **Login**
+   - Go to `/login`
+   - Enter credentials
+   - You'll be redirected to `/tasks`
+
+4. **Create an admin user** (optional)
+   - Register a user first
+   - Then update role in database:
+     ```sql
+     UPDATE users SET role = 'ADMIN' WHERE email = 'your-email@example.com';
+     ```
+
+## 🏗️ Architecture
+
+### Project Structure
+```
+turbovets-assessment/
+├── apps/
+│   ├── api/                    # NestJS Backend
+│   │   └── src/
+│   │       ├── auth/           # Authentication module
+│   │       ├── tasks/          # Task CRUD module
+│   │       ├── users/          # User management module
+│   │       ├── entities/      # Database entities
+│   │       ├── guards/         # Auth & Role guards
+│   │       └── decorators/    # Custom decorators
+│   └── turbovets-assessment/   # Angular Frontend
+│       └── src/
+│           ├── components/     # UI components
+│           ├── services/       # API services
+│           └── guards/         # Route guards
+├── package.json
+└── README.md
 ```
 
-To create a production bundle:
+### Backend Architecture
 
-```sh
-npx nx build turbovets-assessment
+**Modules:**
+- `AuthModule`: Handles authentication (login, register, JWT)
+- `TasksModule`: Task CRUD operations with RBAC
+- `UsersModule`: User management (admin only)
+
+**Key Components:**
+- **Guards:** `JwtAuthGuard` (authentication), `RolesGuard` (authorization)
+- **Services:** Business logic with service-layer RBAC enforcement
+- **Entities:** User, Organization, Task (TypeORM)
+
+### Frontend Architecture
+
+**Components:**
+- `LoginComponent`: User login
+- `RegisterComponent`: User registration
+- `TaskListComponent`: Task management with role-based UI
+- `TaskFormComponent`: Create/edit tasks
+- `AddUserComponent`: Add users (admin only)
+
+**Services:**
+- `AuthService`: Authentication & token management
+- `TaskService`: Task CRUD operations
+- `UserService`: User management
+
+**Guards:**
+- `AuthGuard`: Protects routes (requires login)
+
+## 🔐 Access Control & RBAC
+
+### How It Works
+
+1. **Authentication:**
+   - User logs in → receives JWT token
+   - Token stored in localStorage
+   - Token sent in `Authorization: Bearer <token>` header
+
+2. **Authorization (RBAC):**
+   - **Route Level:** `@Roles()` decorator + `RolesGuard` check user role
+   - **Service Level:** Services check roles before operations
+   - **Frontend:** UI shows/hides buttons based on user role
+
+3. **Organization Scoping:**
+   - Users belong to organizations
+   - Tasks are filtered by `organizationId`
+   - Users can only access tasks from their organization
+
+### Role Permissions
+
+| Action | ADMIN | USER | VIEWER |
+|--------|-------|------|--------|
+| View Tasks | ✅ | ✅ | ✅ |
+| Create Tasks | ✅ | ✅ | ❌ |
+| Update Tasks | ✅ | ✅ | ❌ |
+| Delete Tasks | ✅ | ❌ | ❌ |
+| Add Users | ✅ | ❌ | ❌ |
+
+### Service-Layer Enforcement
+
+RBAC is enforced at **two levels**:
+
+1. **Guard Level** (Route Protection):
+   ```typescript
+   @Roles(UserRole.ADMIN, UserRole.USER)
+   @Post('/tasks')
+   async create() { ... }
+   ```
+
+2. **Service Level** (Business Logic):
+   ```typescript
+   async create(dto: CreateTaskDto, user: User) {
+     if (!this.hasRole(user, [UserRole.ADMIN, UserRole.USER])) {
+       throw new ForbiddenException('Only ADMIN and USER can create tasks');
+     }
+     // ... create task
+   }
+   ```
+
+This ensures security even if guards are bypassed.
+
+## 📡 API Endpoints
+
+### Authentication
+- `POST /auth/register` - Register new user
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "password123",
+    "organizationId": 1
+  }
+  ```
+
+- `POST /auth/login` - Login
+  ```json
+  {
+    "email": "user@example.com",
+    "password": "password123"
+  }
+  ```
+  Returns: `{ "access_token": "..." }`
+
+- `GET /auth/profile` - Get current user (requires JWT)
+  Headers: `Authorization: Bearer <token>`
+
+### Tasks
+- `GET /tasks` - Get all tasks (organization-scoped, all roles)
+- `GET /tasks/:id` - Get task by ID (organization-scoped, all roles)
+- `POST /tasks` - Create task (ADMIN, USER only)
+  ```json
+  {
+    "title": "Fix bug",
+    "description": "Fix login bug",
+    "status": "PENDING"
+  }
+  ```
+- `PUT /tasks/:id` - Update task (ADMIN, USER only)
+- `DELETE /tasks/:id` - Delete task (ADMIN only)
+
+### Users (Admin Only)
+- `POST /users` - Create user (ADMIN only)
+  ```json
+  {
+    "email": "newuser@example.com",
+    "password": "password123",
+    "role": "USER"
+  }
+  ```
+- `GET /users` - Get all users in organization (ADMIN only)
+
+## 🧪 Example Workflows
+
+### 1. Register and Login
+```bash
+# 1. Register
+POST http://localhost:3000/auth/register
+{
+  "email": "admin@test.com",
+  "password": "admin123",
+  "organizationId": 1
+}
+
+# 2. Login
+POST http://localhost:3000/auth/login
+{
+  "email": "admin@test.com",
+  "password": "admin123"
+}
+# Returns: { "access_token": "eyJhbGc..." }
+
+# 3. Use token
+GET http://localhost:3000/auth/profile
+Headers: Authorization: Bearer eyJhbGc...
 ```
 
-To see all available targets to run for a project, run:
-
-```sh
-npx nx show project turbovets-assessment
+### 2. Create Task (as USER)
+```bash
+POST http://localhost:3000/tasks
+Headers: Authorization: Bearer <token>
+{
+  "title": "Complete assessment",
+  "description": "Finish TurboVets assessment",
+  "status": "PENDING"
+}
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/angular:app demo
+### 3. Try to Delete Task (as USER - Should Fail)
+```bash
+DELETE http://localhost:3000/tasks/1
+Headers: Authorization: Bearer <user-token>
+# Returns: 403 Forbidden - "Only ADMIN role can delete tasks"
 ```
 
-To generate a new library, use:
-
-```sh
-npx nx g @nx/angular:lib mylib
+### 4. Add User (as ADMIN)
+```bash
+POST http://localhost:3000/users
+Headers: Authorization: Bearer <admin-token>
+{
+  "email": "newuser@test.com",
+  "password": "password123",
+  "role": "USER"
+}
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## 🎨 Design Decisions
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Why NestJS?
+- **Modular Architecture:** Easy to organize code into modules
+- **Dependency Injection:** Clean, testable code
+- **TypeScript:** Type safety and better DX
+- **Built-in Guards:** Easy route protection
 
-## Set up CI!
+### Why Angular?
+- **TypeScript:** Consistent with backend
+- **Dependency Injection:** Familiar pattern from NestJS
+- **RxJS:** Powerful reactive programming
+- **Component Architecture:** Reusable, maintainable UI
 
-### Step 1
+### Why Service-Layer RBAC?
+- **Defense in Depth:** Security at multiple layers
+- **Business Logic:** RBAC is business logic, belongs in services
+- **Testability:** Easier to test service methods
+- **Flexibility:** Can be called from multiple places
 
-To connect to Nx Cloud, run the following command:
+### Why Organization Scoping?
+- **Multi-tenancy:** Support multiple organizations
+- **Data Isolation:** Security and privacy
+- **Scalability:** Can scale per organization
 
-```sh
-npx nx connect
-```
+## 🔮 Future Improvements
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+Given more time, I would add:
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+1. **Logging & Audit Trail**
+   - Log all user actions
+   - Track who created/updated/deleted what
+   - Audit log for compliance
 
-### Step 2
+2. **Task Assignment**
+   - Assign tasks to specific users
+   - Task ownership and delegation
+   - Notifications on assignment
 
-Use the following command to configure a CI workflow for your workspace:
+3. **Advanced Features**
+   - Task comments and attachments
+   - Due dates and reminders
+   - Task filtering and search
+   - Pagination for large lists
 
-```sh
-npx nx g ci-workflow
-```
+4. **User Management**
+   - Edit/delete users (admin)
+   - User profile management
+   - Password reset flow
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+5. **Testing**
+   - Unit tests for services
+   - Integration tests for API
+   - E2E tests for critical flows
 
-## Install Nx Console
+6. **Deployment**
+   - Docker containerization
+   - CI/CD pipeline
+   - Environment configuration
+   - Production database (PostgreSQL)
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## 📝 Notes
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- Database file (`database.sqlite`) is created automatically on first run
+- Default organization (ID: 1) should be created manually or via migration
+- JWT secret should be in environment variable in production
+- Password hashing uses bcrypt (10 rounds)
 
-## Useful links
+## 🤝 Contributing
 
-Learn more:
+This is an assessment project. For questions or issues, please contact the assessment team.
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## 📄 License
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+This project is for assessment purposes only.
+
+---
+
+**Built with ❤️ for TurboVets Assessment**
